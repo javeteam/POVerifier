@@ -24,9 +24,9 @@ public class XTRFService {
     }
 
 
-    public List<Task> getXTRFTasks(String dateFrom, String dateTo, int customerId, String delimiter) throws BadRequestException {
+    public List<Task> getXTRFTasks(String dateFrom, String dateTo, int customerId, String delimiter, Boolean uninvoicedOnly) throws BadRequestException {
         try{
-            return this.xtrfDao.getXTRFTasks(LocalDate.parse(dateFrom), LocalDate.parse(dateTo), customerId, ProjectNameDelimiter.valueOf(delimiter));
+            return this.xtrfDao.getXTRFTasks(LocalDate.parse(dateFrom), LocalDate.parse(dateTo), customerId, ProjectNameDelimiter.valueOf(delimiter), (uninvoicedOnly != null && uninvoicedOnly));
         } catch (DateTimeParseException | IllegalArgumentException ex) {
             logger.error("Error while parsing input values" + ex);
             throw new BadRequestException("Provided values are invalid " + ex.getMessage());

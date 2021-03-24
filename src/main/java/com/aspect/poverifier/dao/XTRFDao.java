@@ -38,14 +38,14 @@ public class XTRFDao extends JdbcDaoSupport {
             "LEFT JOIN task t ON p.project_id = t.project_id " +
             "LEFT JOIN task_finance tf ON t.task_id = tf.task_id " +
             "LEFT JOIN xtrf_user u ON u.xtrf_user_id =  p.project_manager_id " +
-            "WHERE p.customer_id = ? AND p.status != 'CANCELLED' AND (p.deadline BETWEEN TO_TIMESTAMP(?,'YYYY-MM-DD') AND TO_TIMESTAMP(?,'YYYY-MM-DD'))";
+            "WHERE p.customer_id = ? AND p.status != 'CANCELLED' AND (p.deadline BETWEEN TO_TIMESTAMP(?,'YYYY-MM-DD') AND TO_TIMESTAMP(?,'YYYY-MM-DD')) ";
 
     private final String customersRequest = "SELECT customer_id, name, name_normalized FROM customer " +
             "WHERE status = 'ACTIVE' and number_of_projects > 0 ORDER BY number_of_projects DESC";
 
-    public List<Task> getXTRFTasks(LocalDate dateFrom, LocalDate dateTo, int customerId, ProjectNameDelimiter delimiter){
+    public List<Task> getXTRFTasks(LocalDate dateFrom, LocalDate dateTo, int customerId, ProjectNameDelimiter delimiter, boolean uninvoicedOnly){
         try{
-            return this.jdbcTemplate.query(tasksRequest, new TaskRowMapper(delimiter), customerId, dateFrom.format(sqlDateFormatter), dateTo.format(sqlDateFormatter));
+            return this.jdbcTemplate.query(tasksRequest + (uninvoicedOnly ? "AND t.customer_invoice_id IS NULL" : ""), new TaskRowMapper(delimiter), customerId, dateFrom.format(sqlDateFormatter), dateTo.format(sqlDateFormatter));
         } catch (EmptyResultDataAccessException ignored){
             return new ArrayList<>();
         }

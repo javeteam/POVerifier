@@ -58,9 +58,9 @@ public class MainController {
 
     @RequestMapping(value = {"/addXTRFProperties"}, method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public String addXtrfProperties(HttpServletRequest request, HttpServletResponse response, String dateFrom, String dateTo, String delimiter, String customerId){
+    public String addXtrfProperties(HttpServletRequest request, HttpServletResponse response, String dateFrom, String dateTo, String delimiter, String customerId, Boolean uninvoicedOnly){
         try{
-            List<Task> xtrfTasks = xtrfService.getXTRFTasks(dateFrom, dateTo, Integer.parseInt(customerId), delimiter);
+            List<Task> xtrfTasks = xtrfService.getXTRFTasks(dateFrom, dateTo, Integer.parseInt(customerId), delimiter, uninvoicedOnly);
             request.getSession().setAttribute("xtrfTasks", xtrfTasks);
             return "{\"status\":\"Success\", \"rowsCount\":\"" + xtrfTasks.size() + " \"}";
         } catch (AppException ex){

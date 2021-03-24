@@ -16,6 +16,10 @@ $(document).ready(function () {
 let csvOK = false;
 let xtrfOK = false;
 
+// For stupid chrome which don't fire 'change' event on select file with the same name
+$(document).on('click', 'input[name="csvFile"]', function () {
+    $(this).closest('form').trigger('reset');
+})
 
 $(document).on('change', 'input[name="csvFile"]', function () {
     const form = $(this).closest('form');

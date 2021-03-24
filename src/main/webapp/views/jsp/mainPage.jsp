@@ -50,6 +50,12 @@
                         </select>
                     </div>
                 </div>
+                <div class="section_column">
+                    <div class="section_column_item j_checkbox_wrapper">
+                        <input class="j_checkbox" type="checkbox" id="uninvoicedOnly" name="uninvoicedOnly" value="true" checked>
+                        <label class="j_checkbox_label" for="uninvoicedOnly">Uninvoiced only</label>
+                    </div>
+                </div>
             </form>
             <div class="statistic_section">
                 <div class="section_column js_csv_info empty">
