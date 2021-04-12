@@ -5,28 +5,28 @@ import java.math.BigDecimal;
 import java.util.*;
 
 public class POComparator {
-    private List<String> exclusiveXtrfPONumbers;
-    private List<String> exclusiveClientPONumbers;
+    private List<ClientPO> exclusiveXtrfPOs;
+    private List<ClientPO> exclusiveClientPOs;
     private List<POIssue> POsWithProblems;
     private Map<String, List<Task>> xtrfTasksMap;
-    private Map<String, BigDecimal> clientPONumbers;
+    private Map<String, ClientPO> clientPOs;
 
-    public List<String> getExclusiveXtrfPONumbers() {
-        return exclusiveXtrfPONumbers;
+    public List<ClientPO> getExclusiveXtrfPOs() {
+        return exclusiveXtrfPOs;
     }
 
-    public List<String> getExclusiveClientPONumbers() {
-        return exclusiveClientPONumbers;
+    public List<ClientPO> getExclusiveClientPOs() {
+        return exclusiveClientPOs;
     }
 
     public List<POIssue> getPOsWithProblems() {
         return POsWithProblems;
     }
 
-    public void compare(List<Task> xtrfTasks, Map<String, BigDecimal> clientPONumbers){
+    public void compare(List<Task> xtrfTasks, Map<String, ClientPO> clientPONumbers){
         init();
         if(xtrfTasks == null || clientPONumbers == null) return;
-        this.clientPONumbers = new HashMap<>(clientPONumbers);
+        this.clientPOs = new HashMap<>(clientPONumbers);
         for(Task task : xtrfTasks){
             for(String po : task.getClientProjectNames()){
                 if(xtrfTasksMap.containsKey(po)){
@@ -46,7 +46,12 @@ public class POComparator {
     private void setExclusiveXtrfPONumbers(){
         Set<String> keySet = xtrfTasksMap.keySet();
         for(String poNumber : keySet){
-            if(!clientPONumbers.containsKey(poNumber)) exclusiveXtrfPONumbers.add(poNumber);
+            if(!clientPOs.containsKey(poNumber)){
+                ClientPO clientPO = new ClientPO();
+                clientPO.setNumber(poNumber);
+                clientPO.addRelatedTask(xtrfTasksMap.get(poNumber));
+                exclusiveXtrfPOs.add(clientPO);
+            }
         }
     }
 
@@ -54,9 +59,9 @@ public class POComparator {
      *  Looking for PO numbers which are present in the list provided by client but not in XTRF
      */
     private void setExclusiveClientPONumbers(){
-        Set<String> keySet = clientPONumbers.keySet();
-        for(String po : keySet){
-            if(!xtrfTasksMap.containsKey(po)) exclusiveClientPONumbers.add(po);
+        Set<String> keySet = clientPOs.keySet();
+        for(String poNumber : keySet){
+            if(!xtrfTasksMap.containsKey(poNumber)) exclusiveClientPOs.add(clientPOs.get(poNumber));
         }
     }
 
@@ -67,8 +72,19 @@ public class POComparator {
      * in previous step and all related XTRF tasks. Then it deletes this PO numbers from client list and starts from next item. It works while client PO numbers list has items.
      */
     private void findPONumbersWithProblems(){
-        Set<String> clientPONumbers = this.clientPONumbers.keySet();
-        clientPONumbers.removeIf(po -> exclusiveClientPONumbers.contains(po));
+        Set<String> clientPONumbers = this.clientPOs.keySet();
+
+        for(ClientPO exclusiveClientPO : exclusiveClientPOs){
+            Iterator<String> clientPONumbersIterator = clientPONumbers.iterator();
+            while (clientPONumbersIterator.hasNext()){
+                String clientPONumber = clientPONumbersIterator.next();
+                if(clientPONumber.equals(exclusiveClientPO.getNumber())){
+                    clientPONumbersIterator.remove();
+                    break;
+                }
+            }
+        }
+
         while (!clientPONumbers.isEmpty()){
             Iterator<String> iterator = clientPONumbers.iterator();
             Set<String> relatedPONumbers = getRelatedPONumbers(Collections.singleton(iterator.next()));
@@ -78,7 +94,7 @@ public class POComparator {
                 BigDecimal xtrfTotalAgreed = new BigDecimal("0");
                 Set<Long> taskIds = new HashSet<>();
                 for(String poNumber : relatedPONumbers){
-                    if(this.clientPONumbers.containsKey(poNumber)) clientTotalAgreed = clientTotalAgreed.add(this.clientPONumbers.get(poNumber));
+                    if(this.clientPOs.containsKey(poNumber)) clientTotalAgreed = clientTotalAgreed.add(this.clientPOs.get(poNumber).getTotalAgreed());
                     List<Task> tasks = xtrfTasksMap.get(poNumber);
                     for (Task task : tasks){
                         if(!taskIds.contains(task.getId())){
@@ -92,6 +108,8 @@ public class POComparator {
                     issue.setDifference(xtrfTotalAgreed.subtract(clientTotalAgreed));
                     for(String poNumber : relatedPONumbers){
                         issue.addPoNumber(poNumber, xtrfTasksMap.get(poNumber));
+                        ClientPO clientPO = this.clientPOs.get(poNumber);
+                        if(clientPO != null) clientPO.setIncorrect(true);
                     }
                     POsWithProblems.add(issue);
                 }
@@ -114,9 +132,11 @@ public class POComparator {
     private Set<String> getRelatedPONumbers(@NotNull Set<String> clientPONumbers){
         Set<String> relatedPONumbers = new HashSet<>();
         for(String poNumber : clientPONumbers){
+            ClientPO clientPO = this.clientPOs.get(poNumber);
             List<Task> poTasks = xtrfTasksMap.get(poNumber);
             for(Task task : poTasks){
                 relatedPONumbers.addAll(task.getClientProjectNames());
+                if(clientPO != null) clientPO.addRelatedTask(task);
             }
         }
         if(relatedPONumbers.size() > clientPONumbers.size()){
@@ -126,8 +146,8 @@ public class POComparator {
     }
 
     private void init(){
-        exclusiveXtrfPONumbers = new ArrayList<>();
-        exclusiveClientPONumbers = new ArrayList<>();
+        exclusiveXtrfPOs = new ArrayList<>();
+        exclusiveClientPOs = new ArrayList<>();
         POsWithProblems = new ArrayList<>();
         xtrfTasksMap = new HashMap<>();
     }

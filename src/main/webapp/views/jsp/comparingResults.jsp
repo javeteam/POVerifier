@@ -2,21 +2,21 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
     <div class="document">
-        <c:if test="${exclusiveClientPONumbers.size() == 0 && exclusiveXtrfPONumbers.size() == 0 && POsWithProblems.size() == 0}">
+        <c:if test="${exclusiveClientPOs.size() == 0 && exclusiveXtrfPOs.size() == 0 && POsWithProblems.size() == 0}">
             <span class="no_errors">No differences found</span>
         </c:if>
-        <c:if test="${exclusiveClientPONumbers.size() != 0 || exclusiveXtrfPONumbers.size() != 0}">
+        <c:if test="${exclusiveClientPOs.size() != 0 || exclusiveXtrfPOs.size() != 0}">
             <div class="result_wrapper">
                 <div class="exclusive_po_numbers">
                     <div class="header">Exclusive Client POs</div>
-                    <c:forEach var="exclusiveClientPONumber" items="${exclusiveClientPONumbers}">
-                        <span class="po_number">${exclusiveClientPONumber}</span>
+                    <c:forEach var="exclusiveClientPO" items="${exclusiveClientPOs}">
+                        <span class="po_number">${exclusiveClientPO.number}</span>
                     </c:forEach>
                 </div>
                 <div class="exclusive_po_numbers">
                     <div class="header">Exclusive XTRF POs</div>
-                    <c:forEach var="exclusiveXtrfPONumber" items="${exclusiveXtrfPONumbers}">
-                        <span class="po_number">${exclusiveXtrfPONumber}</span>
+                    <c:forEach var="exclusiveXtrfPO" items="${exclusiveXtrfPOs}">
+                        <span class="po_number">${exclusiveXtrfPO.number}</span>
                     </c:forEach>
                 </div>
             </div>

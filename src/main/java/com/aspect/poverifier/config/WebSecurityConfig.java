@@ -1,6 +1,7 @@
 package com.aspect.poverifier.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -23,9 +24,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
 
     @Autowired
-    public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
+    public void configureGlobal(AuthenticationManagerBuilder auth, @Value("${app.main_pass}") String appPassword) throws Exception {
 
-        String password = this.passwordEncoder().encode("47qWdcmqdQ");
+        String password = this.passwordEncoder().encode(appPassword);
 
         UserDetails user = User
                 .withUsername("user")
@@ -45,6 +46,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
         http.authorizeRequests()
                 .antMatchers("/assets/**").permitAll()
+                .antMatchers("/test").permitAll()
+                .antMatchers("/api/**").permitAll()
                 .anyRequest().authenticated()
                 .and()
 

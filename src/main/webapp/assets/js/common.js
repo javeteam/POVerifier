@@ -117,3 +117,4 @@ $(document).on('keypress', '.login_form input', function (e) {
     const form = $(this).closest('form');
     if(e.keyCode === 13 && form.get(0).checkValidity()) form.trigger('submit');
 })
+

@@ -37,15 +37,24 @@ public class XTRFDao extends JdbcDaoSupport {
     private final String tasksRequest = "SELECT t.task_id, CONCAT(u.first_name, ' ', u.last_name) AS manager_name, p.customer_project_number, p.id_number, tf.total_agreed FROM project p " +
             "LEFT JOIN task t ON p.project_id = t.project_id " +
             "LEFT JOIN task_finance tf ON t.task_id = tf.task_id " +
-            "LEFT JOIN xtrf_user u ON u.xtrf_user_id =  p.project_manager_id " +
-            "WHERE p.customer_id = ? AND p.status != 'CANCELLED' AND (p.deadline BETWEEN TO_TIMESTAMP(?,'YYYY-MM-DD') AND TO_TIMESTAMP(?,'YYYY-MM-DD')) ";
+            "LEFT JOIN xtrf_user u ON u.xtrf_user_id =  p.project_manager_id ";
 
     private final String customersRequest = "SELECT customer_id, name, name_normalized FROM customer " +
             "WHERE status = 'ACTIVE' and number_of_projects > 0 ORDER BY number_of_projects DESC";
 
-    public List<Task> getXTRFTasks(LocalDate dateFrom, LocalDate dateTo, int customerId, ProjectNameDelimiter delimiter, boolean uninvoicedOnly){
+    public List<Task> getTasks(LocalDate dateFrom, LocalDate dateTo, int customerId, ProjectNameDelimiter delimiter, boolean uninvoicedOnly){
+        final String whereClause = "WHERE p.customer_id = ? AND p.status != 'CANCELLED' AND p.deadline >= TO_TIMESTAMP(?,'YYYY-MM-DD') AND p.deadline <= TO_TIMESTAMP(?,'YYYY-MM-DD') " + (uninvoicedOnly ? "AND t.customer_invoice_id IS NULL" : "");
         try{
-            return this.jdbcTemplate.query(tasksRequest + (uninvoicedOnly ? "AND t.customer_invoice_id IS NULL" : ""), new TaskRowMapper(delimiter), customerId, dateFrom.format(sqlDateFormatter), dateTo.format(sqlDateFormatter));
+            return this.jdbcTemplate.query(tasksRequest + whereClause, new TaskRowMapper(delimiter), customerId, dateFrom.format(sqlDateFormatter), dateTo.format(sqlDateFormatter));
+        } catch (EmptyResultDataAccessException ignored){
+            return new ArrayList<>();
+        }
+    }
+
+    public List<Task> getTasks(int customerId, ProjectNameDelimiter delimiter){
+        final String whereClause = "WHERE p.customer_id = ? AND p.status != 'CANCELLED' AND t.customer_invoice_id IS NULL";
+        try{
+            return this.jdbcTemplate.query(tasksRequest + whereClause, new TaskRowMapper(delimiter), customerId);
         } catch (EmptyResultDataAccessException ignored){
             return new ArrayList<>();
         }

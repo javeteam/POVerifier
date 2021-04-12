@@ -2,6 +2,7 @@ package com.aspect.poverifier.entity;
 
 import java.math.BigDecimal;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 public class Task {
@@ -49,5 +50,21 @@ public class Task {
 
     public void setTotalAgreed(BigDecimal totalAgreed) {
         this.totalAgreed = totalAgreed;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Task task = (Task) o;
+        return id == task.id &&
+                Objects.equals(projectIdNumber, task.projectIdNumber) &&
+                projectManager.equals(task.projectManager) &&
+                totalAgreed.equals(task.totalAgreed);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, projectIdNumber, projectManager, totalAgreed);
     }
 }
